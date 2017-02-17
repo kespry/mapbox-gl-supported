@@ -1,10 +1,12 @@
 'use strict';
 
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = isSupported;
+    module.exports = support;
 } else if (window) {
     window.mapboxgl = window.mapboxgl || {};
-    window.mapboxgl.supported = isSupported;
+    if (!window.mapboxgl.support) {
+      window.mapboxgl.support = support;
+    }
 }
 
 /**
@@ -26,6 +28,26 @@ function isSupported(options) {
         isUint8ClampedArraySupported() &&
         isWebGLSupportedCached(options && options.failIfMajorPerformanceCaveat)
     );
+}
+
+function support(options) {
+  return {
+    browser: !!isBrowser(),
+    array: !!isArraySupported(),
+    function: !!isFunctionSupported(),
+    object: !!isObjectSupported(),
+    json: !!isJSONSupported(),
+    worker: !!isWorkerSupported(),
+    uint8Array: !!isUint8ClampedArraySupported(),
+    webGL: {
+      alpha: !!isWebGLSupported({ alpha: true }),
+      alphaPerformance: !!isWebGLSupported({ alpha: true }, true),
+      stencil: !!isWebGLSupported({ stencil: true }),
+      stencilPerformance: !!isWebGLSupported({ stencil: true }, true),
+      depth: !!isWebGLSupported({ depth: true }),
+      depthPerformance: !!isWebGLSupported({ depth: true }, true),
+    }
+  }
 }
 
 function isBrowser() {
@@ -88,7 +110,7 @@ var isWebGLSupportedCache = {};
 function isWebGLSupportedCached(failIfMajorPerformanceCaveat) {
 
     if (isWebGLSupportedCache[failIfMajorPerformanceCaveat] === undefined) {
-        isWebGLSupportedCache[failIfMajorPerformanceCaveat] = isWebGLSupported(failIfMajorPerformanceCaveat);
+        isWebGLSupportedCache[failIfMajorPerformanceCaveat] = isWebGLSupported(Object.create(isSupported.webGLContextAttributes), failIfMajorPerformanceCaveat);
     }
 
     return isWebGLSupportedCache[failIfMajorPerformanceCaveat];
@@ -101,11 +123,12 @@ isSupported.webGLContextAttributes = {
     depth: true
 };
 
-function isWebGLSupported(failIfMajorPerformanceCaveat) {
+
+function isWebGLSupported(contextAttributes, failIfMajorPerformanceCaveat) {
 
     var canvas = document.createElement('canvas');
 
-    var attributes = Object.create(isSupported.webGLContextAttributes);
+    var attributes = contextAttributes;
     attributes.failIfMajorPerformanceCaveat = failIfMajorPerformanceCaveat;
 
     if (canvas.probablySupportsContext) {
