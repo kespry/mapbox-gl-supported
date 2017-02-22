@@ -1,7 +1,10 @@
 'use strict';
 
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = support;
+    module.exports = {
+      support: support,
+      isSupported: isSupported
+    }
 } else if (window) {
     window.mapboxgl = window.mapboxgl || {};
     if (!window.mapboxgl.support) {
